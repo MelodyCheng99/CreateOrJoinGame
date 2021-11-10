@@ -1,6 +1,6 @@
 {
-  "name": "create-or-join-game",
-  "version": "0.1.0",
+  "name": "melodycheng99-create-or-join-game",
+  "version": "1.1.0",
   "private": false,
   "dependencies": {
     "@material-ui/core": "^4.11.3",

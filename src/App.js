@@ -1,4 +1,4 @@
-import { Button, Typography } from '@material-ui/core'
+import { Button, Typography, TextField } from '@material-ui/core'
 import { makeStyles } from '@material-ui/core/styles'
 import { initializeApp } from 'firebase/app'
 import { child, get, getDatabase, ref, set } from 'firebase/database'
@@ -47,6 +47,9 @@ function App() {
   const classes = useStyles()
   const [code, setCode] = useState('')
   const [errorCreatingCode, setErrorCreatingCode] = useState(false)
+  const [codeCreated, setCodeCreated] = useState(false)
+  const [toInputCode, setToInputCode] = useState(false)
+  const [joinedGame, setJoinedGame] = useState(false)
 
   useEffect(() => {
     initializeApp(firebaseConfig)
@@ -59,28 +62,27 @@ function App() {
     }
 
     const db = getDatabase();
-    const codeRef = ref(db);
-    get(child(codeRef, 'cardGames/codes')).then((snapshot) => {
-      let codes = []
-      if (snapshot.exists()) {
-        codes = snapshot.val()
-      }
-
-      set(ref(db, 'cardGames/'), {
-        codes: [...codes, creatingCode]
-      }).then(() => {
-        setCode(creatingCode)
-      }).catch(() => {
-        setErrorCreatingCode(true)
-      })
+    set(ref(db, `cardGames/codes/${creatingCode}`), true).then(() => {
+      setCode(creatingCode)
+      setCodeCreated(true)
     }).catch(() => {
       setErrorCreatingCode(true)
     })
   }
 
-  return (
+  const joinGame = () => {
+    const db = getDatabase();
+    const codesRef = ref(db);
+    get(child(codesRef, 'cardGames/codes/' + code)).then((snapshot) => {
+      if (snapshot.exists()) {
+        setJoinedGame(true)
+      }
+    })
+  }
+
+  return !joinedGame ? (
     <div className={classes.appContainer}>
-      {!code && (
+      {!codeCreated && !toInputCode && (
         <div className={classes.appContainer}>
           <Button
             className={classes.buttons}
@@ -94,20 +96,40 @@ function App() {
             className={classes.buttons}
             variant="outlined"
             color="primary"
-          // onClick={() => {}}
+            onClick={() => { setToInputCode(true) }}
           >
             加入現有遊戲
           </Button>
         </div>
       )}
 
-      {code && (
+      {codeCreated && (
         <Typography>
           你的代碼是: {code}
         </Typography>
       )}
+
+      {toInputCode && (
+        <div className={classes.appContainer}>
+          <Typography>
+            代碼
+          </Typography>
+          <TextField
+            variant="outlined"
+            onChange={(event) => setCode(event.target.value)}
+          />
+          <Button
+            className={classes.buttons}
+            variant="outlined"
+            color="primary"
+            onClick={joinGame}
+          >
+            加入現有遊戲
+          </Button>
+        </div>
+      )}
     </div>
-  );
+  ) : <div />;
 }
 
 export default App;
